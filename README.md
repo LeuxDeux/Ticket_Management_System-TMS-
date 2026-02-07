@@ -24,8 +24,3 @@ El sistema se divide en cuatro capas fundamentales:
 2.  **Sistema de Notificaciones:** Motor dual que combina alertas en tiempo real (Sockets) y comunicaciones persistentes vía Email.
 3.  **Módulo de Documentación:** Una Base de Conocimiento (Knowledge Base) integrada para fomentar el autoservicio del cliente.
 4.  **Panel de Analítica:** Dashboard administrativo para el seguimiento de KPIs críticos como el tiempo promedio de resolución y satisfacción del cliente.
-
-
----
-
-> "La eficiencia no es hacer más cosas, sino hacer las cosas correctas de la manera más inteligente."
