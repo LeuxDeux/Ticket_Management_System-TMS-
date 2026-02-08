@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String    @map("password_hash")
+  name          String
+  role          Role      @default(CLIENT)
+  phone         String?
+  isActive      Boolean?  @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  lastLogin     DateTime? @map("last_login")
+
+  // Relations
+  ticketsCreated Ticket[]    @relation("TicketOwner")
+  ticketsAssigned Ticket[]   @relation("TicketAgent")
+  messages       Message[]
+  attachments    Attachment[]
+
+  @@map("users")
+}
+
+model Ticket {
+  id              String    @id @default(cuid())
+  ticketNumber    String    @unique @map("ticket_number")
+  title           String
+  description     String    @db.Text
+  status          TicketStatus @default(NEW)
+  priority        Priority  @default(MEDIUM)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Foreign keys
+  userId          String    @map("user_id")
+  assignedAgentId String?   @map("assigned_agent_id")
+
+  // Relations
+  user            User      @relation("TicketOwner", fields: [userId], references: [id])
+  assignedAgent   User?     @relation("TicketAgent", fields: [assignedAgentId], references: [id])
+  messages        Message[]
+  attachments     Attachment[]
+
+  @@index([userId])
+  @@index([assignedAgentId])
+  @@map("tickets")
+}
+
+model Message {
+  id              String    @id @default(cuid())
+  content         String    @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  readByAgent     Boolean   @default(false) @map("read_by_agent")
+  readByClient    Boolean   @default(false) @map("read_by_client")
+  readAt          DateTime? @map("read_at")
+
+  // Foreign keys
+  ticketId        String    @map("ticket_id")
+  userId          String    @map("user_id")
+
+  // Relations
+  ticket          Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id])
+  attachments     Attachment[]
+
+  @@index([ticketId])
+  @@index([userId])
+  @@map("messages")
+}
+
+model Attachment {
+  id              String    @id @default(cuid())
+  filename        String
+  mimeType        String    @map("mime_type")
+  size            Int
+  path            String
+  description     String?
+  uploadedAt      DateTime  @default(now()) @map("uploaded_at")
+
+  // Foreign keys
+  ticketId        String?   @map("ticket_id")
+  messageId       String?   @map("message_id")
+  userId          String    @map("user_id")
+
+  // Relations
+  ticket          Ticket?   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message         Message?  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([ticketId])
+  @@index([messageId])
+  @@index([userId])
+  @@map("attachments")
+}
+
+enum Role {
+  CLIENT
+  AGENT
+  ADMIN
+}
+
+enum TicketStatus {
+  NEW
+  ASSIGNED
+  REOPENED
+  WAITING
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+  URGENT
+}
