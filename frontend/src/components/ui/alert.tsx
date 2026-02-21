@@ -3,6 +3,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/utils/utils";
 
+// Alert es un componente de alerta que se utiliza para mostrar mensajes importantes al usuario,
+// como errores, advertencias o información.
+// Como agregado, vemos el uso de variantes, que funcionan como un switch. 
+// Esto nos permite definir diferentes estilos para el componente Alert 
+// según el tipo de alerta que queremos mostrar (por ejemplo, una alerta destructiva para errores).
+// Esta variante se indica en el momento que se define el componente, como una clase adicional, 
+// lo que facilita la reutilización del componente con diferentes estilos según el contexto.
+
+// El componente Alert se compone de AlertTitle y AlertDescription, que se utilizan para mostrar el título 
+// y la descripción de la alerta, respectivamente.
+// Cada uno de estos componentes tiene un "data-slot" que indica su función dentro del Alert, 
+// lo que facilita la composición y el estilo de los componentes.
+
 const alertVariants = cva(
   "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
   {

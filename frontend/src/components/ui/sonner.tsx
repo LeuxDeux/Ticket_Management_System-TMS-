@@ -1,5 +1,3 @@
-"use client";
-
 //Componente Toaster para notificaciones, utilizando la librería Sonner y adaptando el tema según 
 // el tema actual de la aplicación (claro, oscuro o sistema).
 //El componente Toaster se encarga de mostrar notificaciones emergentes en la interfaz de usuario, 

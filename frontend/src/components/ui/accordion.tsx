@@ -1,8 +1,14 @@
-"use client";
-
 import * as React from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { ChevronDownIcon } from "lucide-react";
+
+// Aclaración general para los componentes Radix:
+// Radix utiliza un sistema de composición basado en "slots", 
+// lo que significa que cada componente tiene un propósito específico 
+// y se compone de otros componentes más pequeños.
+// En este caso, tenemos un Accordion que se compone de AccordionItem, AccordionTrigger y AccordionContent.
+// Cada uno de estos componentes tiene un "data-slot" que indica su función dentro del Accordion, 
+// lo que facilita la composición y el estilo de los componentes.
 
 import { cn } from "@/utils/utils";
 

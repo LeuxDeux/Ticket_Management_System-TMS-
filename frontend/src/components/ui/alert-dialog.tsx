@@ -1,10 +1,15 @@
-"use client";
-
 import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
 import { cn } from "@/utils/utils";
 import { buttonVariants } from "./button";
+
+// AlertDialog es un componente de diálogo modal que se utiliza para mostrar 
+// mensajes de alerta o confirmación al usuario.
+// Está compuesto por varios subcomponentes que se encargan de diferentes partes 
+// del diálogo, como el trigger, el contenido, el título, la descripción, etc.
+// Cada subcomponente tiene un "data-slot" que indica su función dentro del AlertDialog, 
+// lo que facilita la composición y el estilo de los componentes.
 
 function AlertDialog({
   ...props
