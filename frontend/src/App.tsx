@@ -1,111 +1,100 @@
-import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Layout } from "./pages/Layout";
-import { LandingPage } from "./pages/LandingPage";
-import { CreateTicket } from "./pages/CreateTicket";
-import { ClientDashboard } from "./pages/ClientDashboard";
-import { AgentDashboard } from "./pages/AgentDashboard";
-import { AdminDashboard } from "./pages/AdminDashboard";
-import { TicketDetail } from "./pages/TicketDetail";
-import { LoginPage } from "./components/auth/LoginPage";
-import { RegisterPage } from "./components/auth/RegisterPage";
-import { ForgotPasswordPage } from "./components/auth/ForgotPasswordPage";
-import { KnowledgeBase } from "./pages/KnowledgeBase";
-import { KnowledgeArticleForm } from "./pages/KnowledgeArticleForm";
-import { KnowledgeArticleDetail } from "./pages/KnowledgeArticleDetail";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/common/ProtectedRoute";
+import { Layout } from "./components/common/Layout";
+import { LandingPage } from "./components/common/LandingPage";
+import { CreateTicket } from "./pages/tickets/CreateTicket";
+import { ClientDashboard } from "./pages/client/ClientDashboard";
+import { AgentDashboard } from "./pages/agent/AgentDashboard";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { TicketDetail } from "./pages/tickets/TicketDetail";
+import { LoginPage } from "./pages/auth/LoginPage";
+import { RegisterPage } from "./pages/auth/RegisterPage";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
+import { KnowledgeBase } from "./pages/article/KnowledgeBase";
+import { KnowledgeArticleForm } from "./pages/article/KnowledgeArticleForm";
+import { KnowledgeArticleDetail } from "./pages/article/KnowledgeArticleDetail";
+import { UnauthorizedPage } from "./components/common/UnauthorizedPage";
 import { Toaster } from "sonner";
+import { LoadingSkeleton } from "./components/common/LoadingSkeleton";
+import NotFound from "./components/common/NotFound";
 
-interface HomeRedirectProps {
-  role: string | null; // O el tipo que tenga su rol
+// Componente que redirige al usuario según su rol
+function HomeRedirect() {
+  const { user, isLoading } = useAuth();
+
+  // Si está cargando, poner el skeleton de carga
+  if (isLoading) return <LoadingSkeleton />;
+
+  // Si hay usuario, redirigir según su rol
+  if (user) {
+    if (user.role === "CLIENTE") return <Navigate to="/dashboard" replace />;
+    if (user.role === "AGENTE")
+      return <Navigate to="/agent-dashboard" replace />;
+    if (user.role === "ADMIN")
+      return <Navigate to="/admin-dashboard" replace />;
+  }
+
+  // Si no hay usuario, mostrar landing page
+  return <LandingPage />;
 }
 
-const HomeRedirect = ({ role }: HomeRedirectProps) => {
-  if (role === "client") return <Navigate to="/dashboard" />;
-  if (role === "agent") return <Navigate to="/agent-dashboard" />;
-  if (role === "admin") return <Navigate to="/admin-dashboard" />;
-  return <LandingPage />;
-};
-
 export default function App() {
-  const [role, setRole] = useState("guest");
-
-  // Simple redirection logic based on role for the root path
-
-  const isStaff = role === "agent" || role === "admin";
-
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout role={role} setRole={setRole} />}>
-          <Route index element={<HomeRedirect role={role} />} />
-          <Route path="new-ticket" element={<CreateTicket />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<HomeRedirect />} />
 
-          <Route
-            path="check-ticket"
-            element={
-              <div className="flex items-center justify-center h-[50vh] flex-col gap-4">
-                <h2 className="text-xl font-bold">Consultar Estado</h2>
-                <input
-                  className="border p-2 rounded w-64"
-                  placeholder="Ingrese número de ticket (ej. TKT-2023...)"
-                />
-                <button className="bg-blue-600 text-white px-4 py-2 rounded">
-                  Buscar
-                </button>
-              </div>
-            }
-          />
+            {/* Rutas públicas */}
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="unauthorized" element={<UnauthorizedPage />} />
 
-          <Route
-            path="dashboard"
-            element={
-              role === "client" ? <ClientDashboard /> : <Navigate to="/" />
-            }
-          />
+            {/* Rutas protegidas para CLIENTES */}
+            <Route element={<ProtectedRoute allowedRoles={["CLIENTE"]} />}>
+              <Route path="dashboard" element={<ClientDashboard />} />
+            </Route>
 
-          <Route
-            path="agent-dashboard"
-            element={
-              role === "agent" ? <AgentDashboard /> : <Navigate to="/" />
-            }
-          />
+            {/* Rutas protegidas para AGENTES y ADMIN */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["AGENTE", "ADMIN"]} />}
+            >
+              <Route path="agent-dashboard" element={<AgentDashboard />} />
+              <Route path="knowledge-base" element={<KnowledgeBase />} />
+              <Route
+                path="knowledge-base/new"
+                element={<KnowledgeArticleForm />}
+              />
+              <Route
+                path="knowledge-base/:id"
+                element={<KnowledgeArticleDetail />}
+              />
+              <Route
+                path="knowledge-base/:id/edit"
+                element={<KnowledgeArticleForm />}
+              />
+            </Route>
 
-          <Route
-            path="admin-dashboard"
-            element={
-              role === "admin" ? <AdminDashboard /> : <Navigate to="/" />
-            }
-          />
+            {/* Rutas protegidas solo para ADMIN */}
+            <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+              <Route path="admin-dashboard" element={<AdminDashboard />} />
+            </Route>
 
-          <Route
-            path="ticket/:id"
-            element={<TicketDetail isAgent={isStaff} />}
-          />
+            {/* Rutas protegidas para usuarios autenticados (cualquier rol) */}
+            <Route element={<ProtectedRoute allowedRoles={["CLIENTE", "AGENTE", "ADMIN"]} />}>
+              <Route path="ticket/:id" element={<TicketDetail />} />
+              <Route path="new-ticket" element={<CreateTicket />} />
+            </Route>
 
-          {/* Knowledge Base Routes - Protected for Agents/Admins */}
-          <Route
-            path="knowledge-base"
-            element={isStaff ? <KnowledgeBase /> : <Navigate to="/" />}
-          />
-          <Route
-            path="knowledge-base/new"
-            element={isStaff ? <KnowledgeArticleForm /> : <Navigate to="/" />}
-          />
-          <Route
-            path="knowledge-base/:id"
-            element={isStaff ? <KnowledgeArticleDetail /> : <Navigate to="/" />}
-          />
-          <Route
-            path="knowledge-base/:id/edit"
-            element={isStaff ? <KnowledgeArticleForm /> : <Navigate to="/" />}
-          />
+            <Route path="*" element={<NotFound />} />
 
-          <Route path="login" element={<LoginPage setRole={setRole} />} />
-          <Route path="register" element={<RegisterPage />} />
-          <Route path="forgot-password" element={<ForgotPasswordPage />} />
-        </Route>
-      </Routes>
-      <Toaster />
-    </BrowserRouter>
+          </Route>
+        </Routes>
+        <Toaster />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

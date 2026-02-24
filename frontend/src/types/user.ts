@@ -7,5 +7,5 @@ export interface User {
   role: UserRole;
   avatar?: string;
   company?: string;
-  phone?: string; // Requerido en Plan
+  phone?: string;
 }
