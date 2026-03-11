@@ -7,9 +7,13 @@ import React, {
   type ReactNode,
 } from "react";
 // Importar el servicio de autenticación que maneja las peticiones al backend
-// @ts-expect-error - authServices es un archivo .js sin tipos TypeScript
 import authServices from "../services/authServices";
 import type { User } from "@/types/user"; // Importar el tipo User para tipar el estado del usuario
+import { USERS, MOCK_CREDENTIALS } from "../mock/data";
+
+// ! Modo MOCK: Esta flag se encarga de activar el uso de datos simulados
+// Cuando la API esté lista, se cambia a falso y se usan llamadas reales al backend
+const USE_MOCK = true;
 
 // Tipos para el contexto de autenticación
 interface AuthContextType {
@@ -54,6 +58,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Función asíncrona para verificar si el usuario tiene una sesión activa
     const checkAuth = async () => {
+      // ! Modo MOCK: cargar el usuario simulado desde localStorage
+      if (USE_MOCK) {
+        const storedUser = localStorage.getItem("mock-user");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+          setToken("mock-token");
+        }
+        setLoading(false);
+        return;
+      }
+
       try {
         // Intentar obtener el token guardado en localStorage
         const storedToken = authServices.getToken();
@@ -95,6 +110,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     username: string,
     password: string,
   ): Promise<boolean> => {
+    // ! Modo MOCK: buscar el usuario simulado en el array USERS
+    if (USE_MOCK) {
+      const found = USERS.find((u) => u.email === username);
+      if (found && MOCK_CREDENTIALS[username] === password) {
+        setUser(found);
+        setToken("mock-token");
+        localStorage.setItem("mock-user", JSON.stringify(found));
+        return true;
+      }
+      return false;
+    }
+
     try {
       // Llamar al servicio de autenticación para hacer login
       // authServices.loginUser hace una petición POST a /auth/login
@@ -140,9 +167,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Función para cerrar sesión
   const logout = (): void => {
-    // Llamar al servicio para eliminar el token de localStorage
-    // Esto ejecuta: localStorage.removeItem('token')
-    authServices.logout();
+    // ! Modo MOCK: eliminar el usuario simulado del localStorage
+    if (USE_MOCK) {
+      localStorage.removeItem("mock-user");
+    } else {
+      // Llamar al servicio para eliminar el token de localStorage
+      // Esto ejecuta: localStorage.removeItem('token')
+      authServices.logout();
+    }
     // Limpiar el token del estado
     setToken(null);
     // Limpiar el usuario del estado

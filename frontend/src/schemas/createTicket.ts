@@ -14,7 +14,7 @@ const createTicketSchema = z.object({
     .min(1, "El asunto es obligatorio")
     .max(200, "El asunto no debe exceder 200 caracteres"),
   category: z.string().min(1, "Selecciona una categoría"),
-  priority: z.enum(["low", "medium", "high"], {
+  priority: z.enum(["low", "medium", "high", "critical"], {
     errorMap: () => ({ message: "Selecciona una prioridad válida" }),
   }),
   description: z

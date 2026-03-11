@@ -76,7 +76,7 @@ const getTicketById = async (req, res) => {
     const ticket = await ticketService.getTicketById(
       id,
       req.user.id,
-      req.user.role
+      req.user.role,
     );
 
     res.json({
@@ -118,7 +118,7 @@ const updateTicket = async (req, res) => {
       id,
       req.user.id,
       req.user.role,
-      updateData
+      updateData,
     );
 
     res.json({
@@ -158,7 +158,7 @@ const deleteTicket = async (req, res) => {
     const ticket = await ticketService.deleteTicket(
       id,
       req.user.id,
-      req.user.role
+      req.user.role,
     );
 
     res.json({
@@ -193,10 +193,7 @@ const deleteTicket = async (req, res) => {
  */
 const getUserStats = async (req, res) => {
   try {
-    const stats = await ticketService.getUserStats(
-      req.user.id,
-      req.user.role
-    );
+    const stats = await ticketService.getUserStats(req.user.id, req.user.role);
 
     res.json({
       message: "Estadísticas obtenidas",
@@ -210,6 +207,64 @@ const getUserStats = async (req, res) => {
   }
 };
 
+/**
+ * Crear ticket público (sin sesión)
+ * POST /api/tickets/public
+ */
+const createPublicTicket = async (req, res) => {
+  try {
+    const { name, email, phone, company, title, description, priority } =
+      req.body;
+
+    const ticket = await ticketService.createPublicTicket(
+      { name, email, phone, company },
+      { title, description, priority },
+    );
+
+    res.status(201).json({
+      message: "Ticket creado exitosamente",
+      ticket,
+    });
+  } catch (err) {
+    res.status(400).json({
+      error: "Error al crear ticket",
+      message: err.message,
+    });
+  }
+};
+
+/**
+ * Consultar ticket por número (flujo público)
+ * GET /api/tickets/public/:ticketNumber?email=...
+ */
+const checkPublicTicket = async (req, res) => {
+  try {
+    const { ticketNumber } = req.params;
+    const { email } = req.query;
+
+    const ticket = await ticketService.getPublicTicketByNumber(
+      ticketNumber,
+      email,
+    );
+
+    res.json({
+      message: "Ticket encontrado",
+      ticket,
+    });
+  } catch (err) {
+    if (err.message === "Ticket no encontrado") {
+      return res.status(404).json({
+        error: "No encontrado",
+        message: err.message,
+      });
+    }
+    res.status(400).json({
+      error: "Error al consultar ticket",
+      message: err.message,
+    });
+  }
+};
+
 module.exports = {
   createTicket,
   getTickets,
@@ -217,4 +272,6 @@ module.exports = {
   updateTicket,
   deleteTicket,
   getUserStats,
+  createPublicTicket,
+  checkPublicTicket,
 };

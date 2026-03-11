@@ -6,7 +6,15 @@ const { prisma } = require("../config/database");
  */
 const ticketService = {
   // Constantes
-  VALID_STATES: ["NEW", "ASSIGNED", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED", "REOPENED"],
+  VALID_STATES: [
+    "NEW",
+    "ASSIGNED",
+    "IN_PROGRESS",
+    "WAITING",
+    "RESOLVED",
+    "CLOSED",
+    "REOPENED",
+  ],
   VALID_PRIORITIES: ["LOW", "MEDIUM", "HIGH", "CRITICAL", "URGENT"],
 
   /**
@@ -36,7 +44,7 @@ const ticketService = {
   validateStatus(status) {
     if (!ticketService.VALID_STATES.includes(status)) {
       throw new Error(
-        `Estado inválido. Válidos: ${ticketService.VALID_STATES.join(", ")}`
+        `Estado inválido. Válidos: ${ticketService.VALID_STATES.join(", ")}`,
       );
     }
   },
@@ -47,7 +55,7 @@ const ticketService = {
   validatePriority(priority) {
     if (!ticketService.VALID_PRIORITIES.includes(priority)) {
       throw new Error(
-        `Prioridad inválida. Válidas: ${ticketService.VALID_PRIORITIES.join(", ")}`
+        `Prioridad inválida. Válidas: ${ticketService.VALID_PRIORITIES.join(", ")}`,
       );
     }
   },
@@ -84,6 +92,115 @@ const ticketService = {
         },
       },
     });
+
+    return ticket;
+  },
+
+  /**
+   * Crear ticket desde flujo público (sin sesión)
+   * Crea o reutiliza un usuario GUEST vinculado al email provisto.
+   * Si el email pertenece a un usuario activo (CLIENT/AGENT/ADMIN) el
+   * ticket se asigna directamente a esa cuenta.
+   */
+  async createPublicTicket(contactData, ticketData) {
+    const { name, email, phone, company } = contactData;
+    const { title, description, priority = "MEDIUM" } = ticketData;
+
+    if (!name || !email || !title || !description) {
+      throw new Error("Nombre, email, título y descripción son requeridos");
+    }
+
+    ticketService.validatePriority(priority);
+
+    // Buscar si ya existe el email en la base de datos
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Sin cuenta previa: crear usuario GUEST
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          phone: phone || null,
+          company: company || null,
+          role: "GUEST",
+          isActive: true,
+        },
+      });
+    } else if (user.role === "GUEST") {
+      // Ya es GUEST: actualizar datos de contacto por si cambiaron
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          name,
+          phone: phone || user.phone,
+          company: company || user.company,
+        },
+      });
+    }
+    // Si el email pertenece a CLIENT/AGENT/ADMIN, se asigna el ticket a esa cuenta
+
+    const ticketNumber = await ticketService.generateTicketNumber();
+
+    const ticket = await prisma.ticket.create({
+      data: {
+        ticketNumber,
+        title,
+        description,
+        priority,
+        status: "NEW",
+        userId: user.id,
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    return ticket;
+  },
+
+  /**
+   * Consultar ticket por número (flujo público)
+   * Requiere el email del creador para verificar identidad.
+   */
+  async getPublicTicketByNumber(ticketNumber, email) {
+    if (!ticketNumber || !email) {
+      throw new Error("Número de ticket y email son requeridos");
+    }
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { ticketNumber },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+        assignedAgent: {
+          select: { id: true, name: true },
+        },
+        messages: {
+          include: {
+            user: {
+              select: { id: true, name: true, role: true },
+            },
+            attachments: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        attachments: true,
+      },
+    });
+
+    if (!ticket) {
+      throw new Error("Ticket no encontrado");
+    }
+
+    // Verificar que el email coincide con el dueño del ticket
+    if (ticket.user.email.toLowerCase() !== email.trim().toLowerCase()) {
+      // Siempre devolver el mismo error para no revelar si el ticket existe
+      throw new Error("Ticket no encontrado");
+    }
 
     return ticket;
   },
@@ -209,7 +326,8 @@ const ticketService = {
 
     // Validar campos permitidos según rol
     if (updateData.title) updateFields.title = updateData.title;
-    if (updateData.description) updateFields.description = updateData.description;
+    if (updateData.description)
+      updateFields.description = updateData.description;
 
     if (updateData.status) {
       ticketService.validateStatus(updateData.status);

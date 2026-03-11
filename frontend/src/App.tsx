@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import { Layout } from "./components/common/Layout";
 import { LandingPage } from "./components/common/LandingPage";
 import { CreateTicket } from "./pages/tickets/CreateTicket";
+import { CheckTicket } from "./pages/tickets/CheckTicket";
 import { ClientDashboard } from "./pages/client/ClientDashboard";
 import { AgentDashboard } from "./pages/agent/AgentDashboard";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
@@ -52,6 +53,8 @@ export default function App() {
             <Route path="register" element={<RegisterPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="unauthorized" element={<UnauthorizedPage />} />
+            <Route path="new-ticket" element={<CreateTicket />} />
+            <Route path="check-ticket" element={<CheckTicket />} />
 
             {/* Rutas protegidas para CLIENTES */}
             <Route element={<ProtectedRoute allowedRoles={["CLIENTE"]} />}>
@@ -84,13 +87,15 @@ export default function App() {
             </Route>
 
             {/* Rutas protegidas para usuarios autenticados (cualquier rol) */}
-            <Route element={<ProtectedRoute allowedRoles={["CLIENTE", "AGENTE", "ADMIN"]} />}>
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={["CLIENTE", "AGENTE", "ADMIN"]} />
+              }
+            >
               <Route path="ticket/:id" element={<TicketDetail />} />
-              <Route path="new-ticket" element={<CreateTicket />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
-
           </Route>
         </Routes>
         <Toaster />

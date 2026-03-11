@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -35,7 +36,6 @@ import {
 } from "../../components/ui/form";
 import { toast } from "sonner";
 import { createTicketSchema } from "../../schemas/createTicket";
-import type { User } from "@/types/user";
 
 // Inferencia de tipos desde Zod
 type CreateTicketValues = z.infer<typeof createTicketSchema>;
@@ -50,8 +50,7 @@ export function CreateTicket() {
     resolver: zodResolver(createTicketSchema),
     defaultValues: {
       name: user ? user.name : "",
-      // Asumimos que su objeto user tiene un campo email, si no, déjelo como string vacío
-      email: user ? (user as User).email || "" : "",
+      email: user ? (user as { email?: string }).email || "" : "",
       subject: "",
       category: "",
       priority: "medium",
@@ -61,15 +60,43 @@ export function CreateTicket() {
     },
   });
 
-  const onSubmit = (data: CreateTicketValues) => {
-    console.log("Datos del Formulario Validados:", data);
+  const onSubmit = async (data: CreateTicketValues) => {
+    try {
+      const priority = data.priority.toUpperCase();
 
-    const uniqueSegment = self.crypto.randomUUID().split("-")[0].toUpperCase();
-    const newTicketId = `TKT-2026-${uniqueSegment}`;
+      if (user) {
+        // Usuario autenticado → endpoint protegido
+        await api.post("/tickets", {
+          title: data.subject,
+          description: data.description,
+          priority,
+        });
+      } else {
+        // Usuario anónimo → endpoint público
+        const response = await api.post("/tickets/public", {
+          name: data.name,
+          email: data.email,
+          phone: data.phone || undefined,
+          company: data.company || undefined,
+          title: data.subject,
+          description: data.description,
+          priority,
+        });
+        const ticketNumber = response.data.ticket.ticketNumber;
+        toast.success(
+          `Ticket ${ticketNumber} creado. Guardá tu número para consultar el estado.`,
+        );
+        navigate("/check-ticket");
+        return;
+      }
 
-    // TODO: Llamada a la API con Axios
-    toast.success(`Ticket creado con éxito: ${newTicketId}`);
-    navigate("/");
+      toast.success("Ticket creado exitosamente");
+      navigate(user.role === "CLIENTE" ? "/dashboard" : "/agent-dashboard");
+    } catch (err: unknown) {
+      const message =
+        (err as { message?: string })?.message || "Error al crear el ticket";
+      toast.error(message);
+    }
   };
 
   return (
@@ -215,6 +242,15 @@ export function CreateTicket() {
                               className="font-normal cursor-pointer"
                             >
                               Alta
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="critical" id="critical" />
+                            <Label
+                              htmlFor="critical"
+                              className="font-normal cursor-pointer text-red-600"
+                            >
+                              Crítica
                             </Label>
                           </div>
                         </RadioGroup>

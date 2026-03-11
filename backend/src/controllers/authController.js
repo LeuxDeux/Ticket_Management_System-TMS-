@@ -16,8 +16,7 @@ const register = async (req, res) => {
     if (!email || !username || !password || !passwordConfirm || !name) {
       return res.status(400).json({
         error: "Campos requeridos",
-        message:
-          "Email, username, contraseña (2x) y nombre son obligatorios",
+        message: "Email, username, contraseña (2x) y nombre son obligatorios",
       });
     }
 
@@ -45,12 +44,12 @@ const register = async (req, res) => {
       });
     }
 
-    // Verificar que email no exista
+    // Verificar que email no exista (o sea un GUEST convertible)
     const existingEmail = await prisma.user.findUnique({
       where: { email },
     });
 
-    if (existingEmail) {
+    if (existingEmail && existingEmail.role !== "GUEST") {
       return res.status(409).json({
         error: "El email ya está registrado",
       });
@@ -70,18 +69,36 @@ const register = async (req, res) => {
     // Hashear contraseña con bcrypt (salt rounds = 10)
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Crear usuario en BD
-    const user = await prisma.user.create({
-      data: {
-        email,
-        username,
-        passwordHash,
-        name,
-        phone: phone || null,
-        role: "CLIENT", // Por defecto, nuevos usuarios son CLIENTE
-        isActive: true,
-      },
-    });
+    let user;
+
+    if (existingEmail && existingEmail.role === "GUEST") {
+      // Convertir GUEST en CLIENT: actualizar el registro existente
+      // Los tickets ya asociados quedan vinculados automáticamente
+      user = await prisma.user.update({
+        where: { id: existingEmail.id },
+        data: {
+          username,
+          passwordHash,
+          name,
+          phone: phone || existingEmail.phone,
+          role: "CLIENT",
+          isActive: true,
+        },
+      });
+    } else {
+      // Crear usuario nuevo en BD
+      user = await prisma.user.create({
+        data: {
+          email,
+          username,
+          passwordHash,
+          name,
+          phone: phone || null,
+          role: "CLIENT",
+          isActive: true,
+        },
+      });
+    }
 
     // Generar token JWT
     const token = generateToken({

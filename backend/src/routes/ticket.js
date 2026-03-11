@@ -8,7 +8,19 @@ const {
   updateTicket,
   deleteTicket,
   getUserStats,
+  createPublicTicket,
+  checkPublicTicket,
 } = require("../controllers/ticketController");
+
+/**
+ * RUTAS PÚBLICAS - Sin autenticación (flujo anónimo)
+ */
+
+// POST /api/tickets/public - Crear ticket sin registrarse
+router.post("/public", createPublicTicket);
+
+// GET /api/tickets/public/:ticketNumber?email=... - Consultar estado de ticket
+router.get("/public/:ticketNumber", checkPublicTicket);
 
 /**
  * RUTAS PROTEGIDAS - Requieren autenticación

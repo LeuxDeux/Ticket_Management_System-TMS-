@@ -1,5 +1,11 @@
 import api from "./api";
 
+// ? Posible implementación de RememberMe:authServices deja 
+// de gestionar storage, y AuthContext centraliza todo, cambiando
+// lo que pasa actualmente authServices.loginUser guarda el token 
+// internamente en localStorage de forma hardcodeada, y 
+// validateToken / getToken también leen siempre de localStorage
+
 const authServices = {
   loginUser: async (username: string, password: string) => {
     try {

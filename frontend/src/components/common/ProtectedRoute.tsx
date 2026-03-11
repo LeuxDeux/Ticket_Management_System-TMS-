@@ -27,7 +27,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   // 3. AUTORIZACIÓN (Opcional): ¿Tiene el nivel de acceso correcto?
   // Si la ruta exige roles específicos y el rol del usuario no está en la lista, se le niega el paso.
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/unauthorized" replace />;
     // O lo redirigimos a su dashboard correspondiente según su rol.
   }
 
