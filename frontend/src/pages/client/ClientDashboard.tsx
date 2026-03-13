@@ -168,7 +168,7 @@ export function ClientDashboard() {
             <div className="text-2xl font-bold">
               {
                 rawTickets.filter(
-                  (t) => !["CERRADO", "RESUELTO"].includes(t.status),
+                  (t) => !["CLOSED", "RESOLVED"].includes(t.status),
                 ).length
               }
             </div>
@@ -180,7 +180,7 @@ export function ClientDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {rawTickets.filter((t) => t.status === "RESUELTO").length}
+              {rawTickets.filter((t) => t.status === "RESOLVED").length}
             </div>
           </CardContent>
         </Card>
@@ -227,9 +227,9 @@ export function ClientDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los estados</SelectItem>
-              <SelectItem value="open">Abiertos / En Proceso</SelectItem>
-              <SelectItem value="RESUELTO">Resueltos</SelectItem>
-              <SelectItem value="CERRADO">Cerrados</SelectItem>
+              <SelectItem value="IN_PROGRESS">Abiertos / En Proceso</SelectItem>
+              <SelectItem value="RESOLVED">Resueltos</SelectItem>
+              <SelectItem value="CLOSED">Cerrados</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -302,8 +302,8 @@ export function ClientDashboard() {
                         Ver
                       </Button>
                     </Link>
-                    {(ticket.status === "RESUELTO" ||
-                      ticket.status === "CERRADO") && (
+                    {(ticket.status === "RESOLVED" ||
+                      ticket.status === "CLOSED") && (
                       <Button
                         variant="ghost"
                         size="icon"

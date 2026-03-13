@@ -29,8 +29,8 @@ function HomeRedirect() {
 
   // Si hay usuario, redirigir según su rol
   if (user) {
-    if (user.role === "CLIENTE") return <Navigate to="/dashboard" replace />;
-    if (user.role === "AGENTE")
+    if (user.role === "CLIENT") return <Navigate to="/dashboard" replace />;
+    if (user.role === "AGENT")
       return <Navigate to="/agent-dashboard" replace />;
     if (user.role === "ADMIN")
       return <Navigate to="/admin-dashboard" replace />;
@@ -57,13 +57,13 @@ export default function App() {
             <Route path="check-ticket" element={<CheckTicket />} />
 
             {/* Rutas protegidas para CLIENTES */}
-            <Route element={<ProtectedRoute allowedRoles={["CLIENTE"]} />}>
+            <Route element={<ProtectedRoute allowedRoles={["CLIENT"]} />}>
               <Route path="dashboard" element={<ClientDashboard />} />
             </Route>
 
             {/* Rutas protegidas para AGENTES y ADMIN */}
             <Route
-              element={<ProtectedRoute allowedRoles={["AGENTE", "ADMIN"]} />}
+              element={<ProtectedRoute allowedRoles={["AGENT", "ADMIN"]} />}
             >
               <Route path="agent-dashboard" element={<AgentDashboard />} />
               <Route path="knowledge-base" element={<KnowledgeBase />} />
@@ -89,7 +89,7 @@ export default function App() {
             {/* Rutas protegidas para usuarios autenticados (cualquier rol) */}
             <Route
               element={
-                <ProtectedRoute allowedRoles={["CLIENTE", "AGENTE", "ADMIN"]} />
+                <ProtectedRoute allowedRoles={["CLIENT", "AGENT", "ADMIN"]} />
               }
             >
               <Route path="ticket/:id" element={<TicketDetail />} />
