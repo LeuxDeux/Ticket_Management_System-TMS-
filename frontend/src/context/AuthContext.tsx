@@ -200,8 +200,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading, // Estado de carga: true mientras se valida el token inicial
     isLoading: loading, // Alias para loading (mejor semántica)
     isAdmin: user?.role === "ADMIN",
-    isAgent: user?.role === "AGENTE",
-    isClient: user?.role === "CLIENTE",
+    isAgent: user?.role === "AGENT",
+    isClient: user?.role === "CLIENT",
   };
 
   // Renderizar el proveedor del contexto
