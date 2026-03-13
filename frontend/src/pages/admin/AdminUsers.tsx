@@ -116,9 +116,9 @@ export function AdminUsers() {
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="client">Cliente</SelectItem>
-                      <SelectItem value="agent">Agente</SelectItem>
-                      <SelectItem value="admin">Administrador</SelectItem>
+                      <SelectItem value="CLIENT">Cliente</SelectItem>
+                      <SelectItem value="AGENT">Agente</SelectItem>
+                      <SelectItem value="ADMIN">Administrador</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -151,9 +151,9 @@ export function AdminUsers() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los roles</SelectItem>
-                <SelectItem value="client">Clientes</SelectItem>
-                <SelectItem value="agent">Agentes</SelectItem>
-                <SelectItem value="admin">Administradores</SelectItem>
+                <SelectItem value="CLIENT">Clientes</SelectItem>
+                <SelectItem value="AGENT">Agentes</SelectItem>
+                <SelectItem value="ADMIN">Administradores</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -185,7 +185,7 @@ export function AdminUsers() {
                       variant={
                         user.role === "ADMIN"
                           ? "destructive"
-                          : user.role === "AGENTE"
+                          : user.role === "AGENT"
                             ? "default"
                             : "secondary"
                       }
@@ -228,7 +228,7 @@ export function AdminUsers() {
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="CLIENTE">
+                                    <SelectItem value="CLIENT">
                                       Cliente
                                     </SelectItem>
                                     <SelectItem value="AGENTE">

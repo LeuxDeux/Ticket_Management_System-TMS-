@@ -45,7 +45,7 @@ const AGENT_METRICS = [
 // Componente principal para la gestión de agentes en el panel de administración
 export function AdminAgents() {
   // Filtramos los usuarios para obtener solo los agentes (esto es un mock, en producción vendría de la API)
-  const agents = USERS.filter((u: User) => u.role === "AGENTE");
+  const agents = USERS.filter((u: User) => u.role === "AGENT");
 
   // Función para manejar la reasignación masiva de tickets de un agente (mock)
   const handleReassign = (agentId: string) => {
